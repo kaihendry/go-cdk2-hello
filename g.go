@@ -1,15 +1,24 @@
 package main
 
 import (
+	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2"
-	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
+
+	"github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2"
 	"github.com/aws/constructs-go/constructs/v10"
-	// "github.com/aws/jsii-runtime-go"
+
+	"github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2"
+	"github.com/aws/aws-cdk-go/awscdkapigatewayv2integrationsalpha/v2"
+
+	"github.com/aws/jsii-runtime-go"
 )
 
 type GStackProps struct {
 	awscdk.StackProps
 }
+
+const accessURLFunctionDirectory = "access"
 
 func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
@@ -18,12 +27,21 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	// The code that defines your stack goes here
+	urlShortenerAPI := awscdkapigatewayv2alpha.NewHttpApi(stack, jsii.String("url-shortner-http-api"), nil)
 
-	// example resource
-	// queue := awssqs.NewQueue(stack, jsii.String("GQueue"), &awssqs.QueueProps{
-	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
-	// })
+	acccessURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("access-url-function"),
+		&awscdklambdagoalpha.GoFunctionProps{
+			Runtime: awslambda.Runtime_GO_1_X(),
+			Entry:   jsii.String(accessURLFunctionDirectory)})
+
+	accessFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(jsii.String("access-function-integration"), acccessURLFunction, nil)
+
+	urlShortenerAPI.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
+		Path:        jsii.String("/"),
+		Methods:     &[]awscdkapigatewayv2alpha.HttpMethod{awscdkapigatewayv2alpha.HttpMethod_GET},
+		Integration: accessFunctionIntg})
+
+	awscdk.NewCfnOutput(stack, jsii.String("output"), &awscdk.CfnOutputProps{Value: urlShortenerAPI.Url(), Description: jsii.String("API Gateway endpoint")})
 
 	return stack
 }
@@ -31,7 +49,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 func main() {
 	app := awscdk.NewApp(nil)
 
-	NewGStack(app, "GStack", &GStackProps{
+	NewGStack(app, "hello-go", &GStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
