@@ -12,4 +12,10 @@ require (
 	github.com/aws/jsii-runtime-go v1.65.0
 )
 
-require github.com/Masterminds/semver/v3 v3.1.1 // indirect
+require github.com/pkg/errors v0.9.1 // indirect
+
+require (
+	github.com/Masterminds/semver/v3 v3.1.1 // indirect
+	github.com/apex/gateway/v2 v2.0.0
+	github.com/apex/log v1.9.0
+)

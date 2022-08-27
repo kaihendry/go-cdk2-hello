@@ -1,23 +1,31 @@
 package main
 
 import (
-	"context"
 	"net/http"
+	"os"
 
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/apex/log"
+	jsonhandler "github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/text"
+
+	"github.com/apex/gateway/v2"
 )
 
 func main() {
-	lambda.Start(handler)
-}
+	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Write([]byte("Hello World"))
+	})
 
-func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	port := os.Getenv("_LAMBDA_SERVER_PORT")
 
-	// respond with hello world
+	var err error
 
-	return events.APIGatewayV2HTTPResponse{
-		StatusCode: http.StatusOK,
-		Body:       "Hello World",
-	}, nil
+	if port == "" {
+		log.SetHandler(text.Default)
+		err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	} else {
+		log.SetHandler(jsonhandler.Default)
+		err = gateway.ListenAndServe("", nil)
+	}
+	log.Fatalf("failed to start server: %v", err)
 }
