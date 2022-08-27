@@ -33,5 +33,6 @@ jobs:
           node-version: "18"
           cache: "npm"
           cache-dependency-path: "**/.github/workflows/*.yml"
-          run: |
-            npx aws-cdk@2.x deploy --require-approval never
+      - name: Run CDK deploy
+        run: |
+          npx aws-cdk@2.x deploy --require-approval never
