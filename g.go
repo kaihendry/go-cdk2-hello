@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 
@@ -16,8 +18,8 @@ import (
 )
 
 var (
-	certArn    = "arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
-	domainName = "hello.dabase.com"
+	certArn    = os.Getenv("AWSCERT")
+	domainName = os.Getenv("DOMAIN")
 )
 
 type GStackProps struct {
@@ -56,7 +58,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 		Methods:     &[]awscdkapigatewayv2alpha.HttpMethod{awscdkapigatewayv2alpha.HttpMethod_GET},
 		Integration: goFunctionIntg})
 
-	awscdk.NewCfnOutput(stack, jsii.String("API Endpoint"), &awscdk.CfnOutputProps{Value: httpApi.ApiEndpoint(), Description: jsii.String("API Gateway endpoint")})
+	awscdk.NewCfnOutput(stack, jsii.String("API Endpoint"), &awscdk.CfnOutputProps{Value: httpApi.Url(), Description: jsii.String("API Gateway endpoint")})
 
 	return stack
 }

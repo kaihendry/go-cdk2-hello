@@ -21,3 +21,6 @@ jobs:
       - name: cdk deploy
         run: |
           npx aws-cdk@2.x deploy --require-approval never
+        env:
+          AWSCERT: arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908
+          DOMAIN: hello.dabase.com

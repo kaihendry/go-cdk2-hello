@@ -1,12 +1,58 @@
-# Welcome to your CDK Go project!
+# Go Hello World using AWS CDK 2
 
-This is a blank project for CDK development with Go.
+## Environment variables in .github/workflows
 
-The `cdk.json` file tells the CDK toolkit how to execute your app.
+For example using DNS validation with wildcard *.dabase.com
 
-## Useful commands
+    AWSCERT="arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
+    DOMAIN="hello.dabase.com"
 
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
- * `go test`         run unit tests
+CI/CD deployment; you need to adjust _role-to-assume_ for the workflow to work.
+
+# To deploy to the cloud
+
+    npx aws-cdk@2.x deploy
+
+# To develop locally
+
+    cd src
+    go get github.com/codegangsta/gin
+    gin
+
+# Why?
+
+There are many ways to deploy a Go application to the AWS Cloud. I've explored them all.
+
+## EC2
+
+Copy across the Go binary and put it behind an ALB or Caddy.
+
+Awkward and isn't serverless.
+
+## Make a Docker image and deploy with Kubernetes
+
+Have you lost your mind? This is incredibly complex and expensive way to deploy a Go application to the Cloud.
+
+Good luck to you and your team.
+
+And it's not serverless.
+
+## AWS Serverless Application Model (SAM)
+
+https://github.com/kaihendry/aws-sam-gateway-example
+
+An efficient usage of AWS native Cloudformation that requires Python tooling such as https://github.com/aws/aws-sam-cli
+
+## Apex Up
+
+Easiest though proprietary https://apex.sh/up/
+
+## Terraform
+
+Very awkward and slow to deploy and requires extra tooling.
+
+## AWS CDK
+
+Keep everything in Go, including the Infrastructure as Code.
+
+Warning experimental APIs: https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2
