@@ -15,11 +15,14 @@ import (
 	"github.com/aws/jsii-runtime-go"
 )
 
+var (
+	certArn    = "arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
+	domainName = "hello.dabase.com"
+)
+
 type GStackProps struct {
 	awscdk.StackProps
 }
-
-const accessURLFunctionDirectory = "access"
 
 func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
@@ -28,35 +31,32 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	certArn := "arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
-	domainName := "hello.dabase.com"
-
 	dn := awscdkapigatewayv2alpha.NewDomainName(stack, jsii.String("DN"), &awscdkapigatewayv2alpha.DomainNameProps{
 		DomainName:  jsii.String(domainName),
 		Certificate: awscertificatemanager.Certificate_FromCertificateArn(stack, jsii.String("Cert"), jsii.String(certArn)),
 	})
 
-	acccessURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("access-url-function"),
+	goURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("go-function"),
 		&awscdklambdagoalpha.GoFunctionProps{
 			Runtime: awslambda.Runtime_GO_1_X(),
-			Entry:   jsii.String(accessURLFunctionDirectory)})
+			Entry:   jsii.String("src")})
 
-	accessFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(jsii.String("access-function-integration"), acccessURLFunction, nil)
+	goFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(jsii.String("go-function-integration"), goURLFunction, nil)
 
 	httpApi := awscdkapigatewayv2alpha.NewHttpApi(stack, jsii.String("HttpProxyProdApi"), &awscdkapigatewayv2alpha.HttpApiProps{
 		ApiName: jsii.String("HttpProxyProdApi"),
 		DefaultDomainMapping: &awscdkapigatewayv2alpha.DomainMappingOptions{
 			DomainName: dn,
 		},
-		DefaultIntegration: accessFunctionIntg,
+		DefaultIntegration: goFunctionIntg,
 	})
 
 	httpApi.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
 		Path:        jsii.String("/"),
 		Methods:     &[]awscdkapigatewayv2alpha.HttpMethod{awscdkapigatewayv2alpha.HttpMethod_GET},
-		Integration: accessFunctionIntg})
+		Integration: goFunctionIntg})
 
-	awscdk.NewCfnOutput(stack, jsii.String("output"), &awscdk.CfnOutputProps{Value: httpApi.Url(), Description: jsii.String("API Gateway endpoint")})
+	awscdk.NewCfnOutput(stack, jsii.String("API Endpoint"), &awscdk.CfnOutputProps{Value: httpApi.ApiEndpoint(), Description: jsii.String("API Gateway endpoint")})
 
 	return stack
 }
