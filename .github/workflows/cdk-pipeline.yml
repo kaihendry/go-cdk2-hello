@@ -1,12 +1,20 @@
+name: Deploy Go via CDK
+
+env:
+  AWSCERT: arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908
+  DOMAIN: hello.dabase.com
+
 on:
   schedule:
     - cron: 0 0 * * *
   push:
     branches:
       - main
+
 permissions:
   id-token: write
   contents: read
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -27,6 +35,3 @@ jobs:
           cache-dependency-path: "**/.github/workflows/*.yml"
           run: |
             npx aws-cdk@2.x deploy --require-approval never
-          env:
-            AWSCERT: arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908
-            DOMAIN: hello.dabase.com
