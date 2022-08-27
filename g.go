@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 
 	"github.com/aws/aws-cdk-go/awscdk/v2"
@@ -27,7 +28,13 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	urlShortenerAPI := awscdkapigatewayv2alpha.NewHttpApi(stack, jsii.String("url-shortner-http-api"), nil)
+	certArn := "arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
+	domainName := "hello.dabase.com"
+
+	dn := awscdkapigatewayv2alpha.NewDomainName(stack, jsii.String("DN"), &awscdkapigatewayv2alpha.DomainNameProps{
+		DomainName:  jsii.String(domainName),
+		Certificate: awscertificatemanager.Certificate_FromCertificateArn(stack, jsii.String("Cert"), jsii.String(certArn)),
+	})
 
 	acccessURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("access-url-function"),
 		&awscdklambdagoalpha.GoFunctionProps{
@@ -36,12 +43,20 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 
 	accessFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(jsii.String("access-function-integration"), acccessURLFunction, nil)
 
-	urlShortenerAPI.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
+	httpApi := awscdkapigatewayv2alpha.NewHttpApi(stack, jsii.String("HttpProxyProdApi"), &awscdkapigatewayv2alpha.HttpApiProps{
+		ApiName: jsii.String("HttpProxyProdApi"),
+		DefaultDomainMapping: &awscdkapigatewayv2alpha.DomainMappingOptions{
+			DomainName: dn,
+		},
+		DefaultIntegration: accessFunctionIntg,
+	})
+
+	httpApi.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
 		Path:        jsii.String("/"),
 		Methods:     &[]awscdkapigatewayv2alpha.HttpMethod{awscdkapigatewayv2alpha.HttpMethod_GET},
 		Integration: accessFunctionIntg})
 
-	awscdk.NewCfnOutput(stack, jsii.String("output"), &awscdk.CfnOutputProps{Value: urlShortenerAPI.Url(), Description: jsii.String("API Gateway endpoint")})
+	awscdk.NewCfnOutput(stack, jsii.String("output"), &awscdk.CfnOutputProps{Value: httpApi.Url(), Description: jsii.String("API Gateway endpoint")})
 
 	return stack
 }
