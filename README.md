@@ -7,7 +7,7 @@ For example using DNS validation with wildcard *.dabase.com
     AWSCERT="arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
     DOMAIN="hello.dabase.com"
 
-CI/CD deployment; you need to adjust _role-to-assume_ for the workflow to work.
+CI/CD deployment; [you need to adjust _role-to-assume_ for the workflow to work](https://youtu.be/WKzVqFsOBSE), once setup you avoid the need to setup AWS_SECRET_ACCESS_KEY credentials.
 
 # To deploy to the cloud
 
