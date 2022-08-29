@@ -13,12 +13,12 @@ CI/CD deployment; [you need to adjust _role-to-assume_ for the workflow to work]
 
     npx aws-cdk@2.x deploy
 
-# To develop locally
+# To develop locally with a live reloader
 
     cd src
-    go get github.com/codegangsta/gin
-    gin
-
+    go install github.com/cosmtrek/air@latest
+    PORT=3000 air
+    
 # Why?
 
 There are many ways to deploy a Go application to the AWS Cloud. I've explored them all.
@@ -56,3 +56,7 @@ Very awkward and slow to deploy and requires extra tooling.
 Keep everything in Go, including the Infrastructure as Code.
 
 Warning experimental APIs: https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2
+
+# Related
+
+* https://www.go-on-aws.com/infrastructure-as-go/cdk-go/
