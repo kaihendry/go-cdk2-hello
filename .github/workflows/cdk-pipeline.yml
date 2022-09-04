@@ -20,7 +20,7 @@ jobs:
     name: Deploy to staging
     environment:
       name: staging
-      url: https://hello-stg.dabase.com
+      url: https://stghello.dabase.com
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -40,7 +40,7 @@ jobs:
         run: |
           npx aws-cdk@2.x deploy --require-approval never
         env:
-          DOMAIN: hello-stg.dabase.com
+          DOMAIN: stghello.dabase.com
 
   production:
     runs-on: ubuntu-latest
