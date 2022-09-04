@@ -41,9 +41,14 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	goURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("go-function"),
 		&awscdklambdagoalpha.GoFunctionProps{
 			Runtime: awslambda.Runtime_GO_1_X(),
-			Entry:   jsii.String("src")})
+			Entry:   jsii.String("src"),
+		})
 
-	goFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(jsii.String("go-function-integration"), goURLFunction, nil)
+	goFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(
+		jsii.String("go-function-integration"),
+		goURLFunction,
+		nil,
+	)
 
 	httpApi := awscdkapigatewayv2alpha.NewHttpApi(stack, jsii.String("HttpProxyProdApi"), &awscdkapigatewayv2alpha.HttpApiProps{
 		ApiName: jsii.String("HttpProxyProdApi"),
@@ -56,9 +61,14 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	httpApi.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
 		Path:        jsii.String("/"),
 		Methods:     &[]awscdkapigatewayv2alpha.HttpMethod{awscdkapigatewayv2alpha.HttpMethod_GET},
-		Integration: goFunctionIntg})
+		Integration: goFunctionIntg,
+	})
 
-	awscdk.NewCfnOutput(stack, jsii.String("API Endpoint"), &awscdk.CfnOutputProps{Value: httpApi.Url(), Description: jsii.String("API Gateway endpoint")})
+	awscdk.NewCfnOutput(
+		stack,
+		jsii.String("API Endpoint"),
+		&awscdk.CfnOutputProps{Value: httpApi.Url(), Description: jsii.String("API Gateway endpoint")},
+	)
 
 	return stack
 }
@@ -66,7 +76,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 func main() {
 	app := awscdk.NewApp(nil)
 
-	NewGStack(app, "hello-go", &GStackProps{
+	NewGStack(app, domainName, &GStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
