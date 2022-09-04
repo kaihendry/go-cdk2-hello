@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
@@ -75,8 +76,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 
 func main() {
 	app := awscdk.NewApp(nil)
-
-	NewGStack(app, domainName, &GStackProps{
+	NewGStack(app, strings.ReplaceAll(domainName, ".", "-"), &GStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},

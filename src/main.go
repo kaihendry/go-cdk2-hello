@@ -14,7 +14,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-		rw.Write([]byte("Howdy World ... " + time.Now().String()))
+		rw.Write([]byte("Hallo World ... " + time.Now().String()))
 	})
 
 	port := os.Getenv("_LAMBDA_SERVER_PORT")
