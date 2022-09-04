@@ -2,7 +2,6 @@ name: Deploy Go via CDK
 
 env:
   AWSCERT: arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908
-  DOMAIN: hello.dabase.com
 
 on:
   schedule:
@@ -16,8 +15,12 @@ permissions:
   contents: read
 
 jobs:
-  build-deploy:
+  staging:
     runs-on: ubuntu-latest
+    name: Deploy to staging
+    environment:
+      name: staging
+      url: https://hello-stg.dabase.com
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -36,3 +39,32 @@ jobs:
       - name: Run CDK deploy
         run: |
           npx aws-cdk@2.x deploy --require-approval never
+        env:
+          DOMAIN: hello-stg.dabase.com
+
+  production:
+    runs-on: ubuntu-latest
+    name: Deploy to production
+    environment:
+      name: production
+      url: https://hello.dabase.com
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "1.19"
+          cache: true
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
+          aws-region: ap-southeast-1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "**/.github/workflows/*.yml"
+      - name: Run CDK deploy
+        run: |
+          npx aws-cdk@2.x deploy --require-approval never
+        env:
+          DOMAIN: hello.dabase.com
