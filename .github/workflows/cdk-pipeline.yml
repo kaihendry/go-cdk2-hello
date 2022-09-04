@@ -41,6 +41,7 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never
         env:
           DOMAIN: stghello.dabase.com
+          VERSION: ${GITHUB_SHA::7}
 
   production:
     runs-on: ubuntu-latest
@@ -68,3 +69,4 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never
         env:
           DOMAIN: hello.dabase.com
+          VERSION: ${GITHUB_SHA::7}
