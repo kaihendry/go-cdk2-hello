@@ -39,10 +39,15 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 		Certificate: awscertificatemanager.Certificate_FromCertificateArn(stack, jsii.String("Cert"), jsii.String(certArn)),
 	})
 
+	funcEnvVar := &map[string]*string{
+		"VERSION": jsii.String(os.Getenv("VERSION")),
+	}
+
 	goURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("go-function"),
 		&awscdklambdagoalpha.GoFunctionProps{
-			Runtime: awslambda.Runtime_GO_1_X(),
-			Entry:   jsii.String("src"),
+			Runtime:     awslambda.Runtime_GO_1_X(),
+			Entry:       jsii.String("src"),
+			Environment: funcEnvVar,
 		})
 
 	goFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(
