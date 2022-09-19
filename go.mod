@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2 v2.40.0-alpha.0
 	github.com/aws/aws-cdk-go/awscdkapigatewayv2integrationsalpha/v2 v2.40.0-alpha.0
 	github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2 v2.40.0-alpha.0
-	github.com/aws/constructs-go/constructs/v10 v10.1.94
+	github.com/aws/constructs-go/constructs/v10 v10.1.106
 	github.com/aws/jsii-runtime-go v1.67.0
 )
 
