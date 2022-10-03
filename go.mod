@@ -3,12 +3,12 @@ module github.com/kaihendry/go-cdk2-hello
 go 1.19
 
 require (
-	github.com/aws/aws-cdk-go/awscdk/v2 v2.40.0
+	github.com/aws/aws-cdk-go/awscdk/v2 v2.44.0
 	github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2 v2.40.0-alpha.0
 	github.com/aws/aws-cdk-go/awscdkapigatewayv2integrationsalpha/v2 v2.40.0-alpha.0
-	github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2 v2.40.0-alpha.0
-	github.com/aws/constructs-go/constructs/v10 v10.1.94
-	github.com/aws/jsii-runtime-go v1.67.0
+	github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2 v2.44.0-alpha.0
+	github.com/aws/constructs-go/constructs/v10 v10.1.108
+	github.com/aws/jsii-runtime-go v1.68.0
 )
 
 require (
