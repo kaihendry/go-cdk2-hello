@@ -24,15 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: ap-southeast-1
       - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: "**/.github/workflows/*.yml"
       - name: Run CDK deploy
         run: |
           npx aws-cdk@2.x deploy --require-approval never
@@ -47,16 +43,13 @@ jobs:
       name: production
       url: https://hello.dabase.com
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: "1.19"
-          cache: true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: ap-southeast-1
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18"
       - name: Run CDK deploy
