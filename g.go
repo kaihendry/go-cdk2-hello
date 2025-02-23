@@ -41,7 +41,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 		"VERSION": jsii.String(os.Getenv("VERSION")),
 	}
 
-	goURLFunction := awslambda.NewFunction(stack, jsii.String("go-function"), &awslambda.FunctionProps{
+	goURLFunction := awslambda.NewFunction(stack, jsii.String("go-function-al"), &awslambda.FunctionProps{
 		Runtime:     awslambda.Runtime_PROVIDED_AL2023(),
 		Handler:     jsii.String("bootstrap"),
 		Code:        awslambda.AssetCode_FromAsset(jsii.String("src/function.zip"), nil),
