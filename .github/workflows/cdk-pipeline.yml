@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: "1.19"
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: ap-southeast-1
@@ -54,7 +54,7 @@ jobs:
         with:
           go-version: "1.19"
           cache: true
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: ap-southeast-1
