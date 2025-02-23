@@ -4,17 +4,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aws/aws-cdk-go/awscdk/awsapigatewayv2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigatewayv2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigatewayv2integrations"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 
-	"github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2"
 	"github.com/aws/constructs-go/constructs/v10"
-
-	"github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2"
-	"github.com/aws/aws-cdk-go/awscdkapigatewayv2integrationsalpha/v2"
 
 	"github.com/aws/jsii-runtime-go"
 )
@@ -35,7 +32,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	dn := awscdkapigatewayv2alpha.NewDomainName(stack, jsii.String("DN"), &awscdkapigatewayv2alpha.DomainNameProps{
+	dn := awsapigatewayv2.NewDomainName(stack, jsii.String("DN"), &awsapigatewayv2.DomainNameProps{
 		DomainName:  jsii.String(domainName),
 		Certificate: awscertificatemanager.Certificate_FromCertificateArn(stack, jsii.String("Cert"), jsii.String(certArn)),
 	})
@@ -44,30 +41,25 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 		"VERSION": jsii.String(os.Getenv("VERSION")),
 	}
 
-	goURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("go-function"),
-		&awscdklambdagoalpha.GoFunctionProps{
-			Runtime:     awslambda.Runtime_PROVIDED_AL2023(),
-			Handler:     jsii.String("bootstrap"),
-			Code:        awslambda.AssetCode_FromAsset(jsii.String("src/function.zip"), nil),
-			Environment: funcEnvVar,
-		})
-
-	goFunctionIntg := awscdkapigatewayv2integrationsalpha.NewHttpLambdaIntegration(
-		jsii.String("go-function-integration"),
-		goURLFunction,
-		nil,
-	)
-
-	httpApi := awscdkapigatewayv2alpha.NewHttpApi(stack, jsii.String("HttpProxyProdApi"), &awscdkapigatewayv2alpha.HttpApiProps{
-		ApiName: jsii.String("HttpProxyProdApi"),
-		DefaultDomainMapping: &awscdkapigatewayv2alpha.DomainMappingOptions{
-			DomainName: dn,
-		},
-		DefaultIntegration: goFunctionIntg,
+	goURLFunction := awslambda.NewFunction(stack, jsii.String("go-function"), &awslambda.FunctionProps{
+		Runtime:     awslambda.Runtime_PROVIDED_AL2023(),
+		Handler:     jsii.String("bootstrap"),
+		Code:        awslambda.AssetCode_FromAsset(jsii.String("app/function.zip"), nil),
+		Environment: funcEnvVar,
 	})
 
-	httpApi.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
-		Path: jsii.String("/"),
+	httpApi := awsapigatewayv2.NewHttpApi(stack, jsii.String("MyHttpApi"), &awsapigatewayv2.HttpApiProps{
+		ApiName: jsii.String("MyHttpApi"),
+		DefaultDomainMapping: &awsapigatewayv2.DomainMappingOptions{
+			DomainName: dn,
+		},
+	})
+
+	lambdaIntegration := awsapigatewayv2integrations.NewHttpLambdaIntegration(jsii.String("LambdaIntegration"), goURLFunction, nil)
+
+	httpApi.AddRoutes(&awsapigatewayv2.AddRoutesOptions{
+		Path:        jsii.String("/"),
+		Integration: lambdaIntegration,
 		Methods: &[]awsapigatewayv2.HttpMethod{
 			awsapigatewayv2.HttpMethod_GET,
 			awsapigatewayv2.HttpMethod_POST,
@@ -77,7 +69,6 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 			awsapigatewayv2.HttpMethod_OPTIONS,
 			awsapigatewayv2.HttpMethod_HEAD,
 		},
-		Integration: goFunctionIntg,
 	})
 
 	awscdk.NewCfnOutput(
