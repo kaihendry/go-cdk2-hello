@@ -3,6 +3,7 @@ module github.com/kaihendry/go-cdk2-hello
 go 1.24
 
 require (
+	github.com/aws/aws-cdk-go/awscdk v1.204.0-devpreview
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.180.0
 	github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2 v2.114.1-alpha.0
 	github.com/aws/aws-cdk-go/awscdkapigatewayv2integrationsalpha/v2 v2.114.1-alpha.0
@@ -13,6 +14,7 @@ require (
 
 require (
 	github.com/aws/aws-lambda-go v1.34.1 // indirect
+	github.com/aws/constructs-go/constructs/v3 v3.4.344 // indirect
 	github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.224 // indirect
 	github.com/cdklabs/awscdk-asset-node-proxy-agent-go/nodeproxyagentv6/v2 v2.1.0 // indirect
 	github.com/cdklabs/cloud-assembly-schema-go/awscdkcloudassemblyschema/v39 v39.2.20 // indirect
@@ -23,7 +25,6 @@ require (
 	github.com/yuin/goldmark v1.7.8 // indirect
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
 	golang.org/x/mod v0.23.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect

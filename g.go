@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-cdk-go/awscdk/awsapigatewayv2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awscertificatemanager"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 
@@ -45,8 +46,9 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 
 	goURLFunction := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("go-function"),
 		&awscdklambdagoalpha.GoFunctionProps{
-			Runtime:     awslambda.Runtime_GO_1_X(),
-			Entry:       jsii.String("src"),
+			Runtime:     awslambda.Runtime_PROVIDED_AL2023(),
+			Handler:     jsii.String("bootstrap"),
+			Code:        awslambda.AssetCode_FromAsset(jsii.String("src/function.zip"), nil),
 			Environment: funcEnvVar,
 		})
 
@@ -65,8 +67,16 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 	})
 
 	httpApi.AddRoutes(&awscdkapigatewayv2alpha.AddRoutesOptions{
-		Path:        jsii.String("/"),
-		Methods:     &[]awscdkapigatewayv2alpha.HttpMethod{awscdkapigatewayv2alpha.HttpMethod_GET},
+		Path: jsii.String("/"),
+		Methods: &[]awsapigatewayv2.HttpMethod{
+			awsapigatewayv2.HttpMethod_GET,
+			awsapigatewayv2.HttpMethod_POST,
+			awsapigatewayv2.HttpMethod_PUT,
+			awsapigatewayv2.HttpMethod_DELETE,
+			awsapigatewayv2.HttpMethod_PATCH,
+			awsapigatewayv2.HttpMethod_OPTIONS,
+			awsapigatewayv2.HttpMethod_HEAD,
+		},
 		Integration: goFunctionIntg,
 	})
 
