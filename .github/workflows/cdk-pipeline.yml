@@ -23,7 +23,7 @@ jobs:
       url: https://stghello.dabase.com
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.19"
       - uses: aws-actions/configure-aws-credentials@v1
@@ -50,7 +50,7 @@ jobs:
       url: https://hello.dabase.com
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.19"
           cache: true
