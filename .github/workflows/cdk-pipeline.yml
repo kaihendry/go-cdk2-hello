@@ -31,7 +31,7 @@ jobs:
       - uses: actions/setup-node@v4
       - name: Run CDK deploy
         run: |
-          (cd src && make)
+          make -C src/
           npx aws-cdk@2.x deploy --require-approval never
         env:
           DOMAIN: stghello.dabase.com
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/setup-node@v4
       - name: Run CDK deploy
         run: |
-          (cd src && make)
+          make -C src/
           npx aws-cdk@2.x deploy --require-approval never
         env:
           DOMAIN: hello.dabase.com
