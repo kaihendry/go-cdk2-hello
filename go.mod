@@ -3,18 +3,13 @@ module github.com/kaihendry/go-cdk2-hello
 go 1.24
 
 require (
-	github.com/aws/aws-cdk-go/awscdk v1.204.0-devpreview
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.180.0
-	github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2 v2.114.1-alpha.0
-	github.com/aws/aws-cdk-go/awscdkapigatewayv2integrationsalpha/v2 v2.114.1-alpha.0
-	github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2 v2.180.0-alpha.0
 	github.com/aws/constructs-go/constructs/v10 v10.4.2
-	github.com/aws/jsii-runtime-go v1.107.0
+	github.com/aws/jsii-runtime-go v1.108.0
 )
 
 require (
 	github.com/aws/aws-lambda-go v1.34.1 // indirect
-	github.com/aws/constructs-go/constructs/v3 v3.4.344 // indirect
 	github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.224 // indirect
 	github.com/cdklabs/awscdk-asset-node-proxy-agent-go/nodeproxyagentv6/v2 v2.1.0 // indirect
 	github.com/cdklabs/cloud-assembly-schema-go/awscdkcloudassemblyschema/v39 v39.2.20 // indirect
