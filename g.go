@@ -49,8 +49,7 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 		Architecture: awslambda.Architecture_ARM_64(),
 	})
 
-	httpApi := awsapigatewayv2.NewHttpApi(stack, jsii.String("MyHttpApi"), &awsapigatewayv2.HttpApiProps{
-		ApiName: jsii.String("MyHttpApi"),
+	httpApi := awsapigatewayv2.NewHttpApi(stack, jsii.String(domainName), &awsapigatewayv2.HttpApiProps{
 		DefaultDomainMapping: &awsapigatewayv2.DomainMappingOptions{
 			DomainName: dn,
 		},
