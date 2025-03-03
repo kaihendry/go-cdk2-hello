@@ -8,8 +8,8 @@ github.com/apex/log v1.9.0/go.mod h1:m82fZlWIuiWzWP04XCTXmnX0xRkYYbCdYn8jbJeLBEA
 github.com/apex/logs v1.0.0/go.mod h1:XzxuLZ5myVHDy9SAmYpamKKRNApGj54PfYLcFrXqDwo=
 github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a/go.mod h1:3NqKYiepwy8kCu4PNA+aP7WUV72eXWJeP9/r3/K9aLE=
 github.com/aphistic/sweet v0.2.0/go.mod h1:fWDlIh/isSE9n6EPsRmC0det+whmX6dJid3stzu0Xys=
-github.com/aws/aws-cdk-go/awscdk/v2 v2.180.0 h1:I6Oop6dOSOb3fdpXZpQr3PzV5uggoYdhNwwmZZZECmA=
-github.com/aws/aws-cdk-go/awscdk/v2 v2.180.0/go.mod h1:CH/Wgsf3oZYZWYXVaYw4Bg3/C6X8k6y0Cc8PFCx/dCw=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.181.1 h1:r1wm4qb0/opzha35L8ZCofESXrky6IJdjVAaUFHxQ5s=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.181.1/go.mod h1:CH/Wgsf3oZYZWYXVaYw4Bg3/C6X8k6y0Cc8PFCx/dCw=
 github.com/aws/aws-lambda-go v1.17.0/go.mod h1:FEwgPLE6+8wcGBTe5cJN3JWurd1Ztm9zN4jsXsjzKKw=
 github.com/aws/aws-lambda-go v1.34.1 h1:M3a/uFYBjii+tDcOJ0wL/WyFi2550FHoECdPf27zvOs=
 github.com/aws/aws-lambda-go v1.34.1/go.mod h1:jwFe2KmMsHmffA1X2R09hH6lFzJQxzI8qK17ewzbQMM=
