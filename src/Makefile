@@ -1,5 +1,5 @@
 build:
-	@GOOS=linux GOARCH=arm64 go build -o bootstrap
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bootstrap
 	@zip -j function.zip bootstrap
 
 clean:
