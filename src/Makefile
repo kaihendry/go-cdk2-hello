@@ -1,5 +1,5 @@
 build:
-	@GOOS=linux GOARCH=amd64 go build -o bootstrap
+	@GOOS=linux GOARCH=arm64 go build -o bootstrap
 	@zip -j function.zip bootstrap
 
 clean:
