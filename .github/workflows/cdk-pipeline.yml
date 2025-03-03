@@ -1,7 +1,7 @@
 name: Deploy Go via CDK
 
 env:
-  AWSCERT: arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908
+  AWSCERT: arn:aws:acm:eu-west-2:407461997746:certificate/9083a66b-72b6-448d-9bce-6ee2e2e52e36
 
 on:
   schedule:
@@ -27,7 +27,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
-          aws-region: ap-southeast-1
+          aws-region: eu-west-2
       - uses: actions/setup-node@v4
       - name: Run CDK deploy
         run: |
@@ -53,7 +53,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
-          aws-region: ap-southeast-1
+          aws-region: eu-west-2
       - uses: actions/setup-node@v4
       - name: Run CDK deploy
         run: |
