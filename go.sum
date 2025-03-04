@@ -10,6 +10,8 @@ github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a/go.mod h1:3NqKYiepwy
 github.com/aphistic/sweet v0.2.0/go.mod h1:fWDlIh/isSE9n6EPsRmC0det+whmX6dJid3stzu0Xys=
 github.com/aws/aws-cdk-go/awscdk/v2 v2.180.0 h1:I6Oop6dOSOb3fdpXZpQr3PzV5uggoYdhNwwmZZZECmA=
 github.com/aws/aws-cdk-go/awscdk/v2 v2.180.0/go.mod h1:CH/Wgsf3oZYZWYXVaYw4Bg3/C6X8k6y0Cc8PFCx/dCw=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.181.1 h1:r1wm4qb0/opzha35L8ZCofESXrky6IJdjVAaUFHxQ5s=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.181.1/go.mod h1:CH/Wgsf3oZYZWYXVaYw4Bg3/C6X8k6y0Cc8PFCx/dCw=
 github.com/aws/aws-lambda-go v1.17.0/go.mod h1:FEwgPLE6+8wcGBTe5cJN3JWurd1Ztm9zN4jsXsjzKKw=
 github.com/aws/aws-lambda-go v1.34.1 h1:M3a/uFYBjii+tDcOJ0wL/WyFi2550FHoECdPf27zvOs=
 github.com/aws/aws-lambda-go v1.34.1/go.mod h1:jwFe2KmMsHmffA1X2R09hH6lFzJQxzI8qK17ewzbQMM=
@@ -21,6 +23,8 @@ github.com/aws/jsii-runtime-go v1.108.0/go.mod h1:SA8nwFENRBvPlIVEKzb9VKAoplOYEo
 github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59/go.mod h1:q/89r3U2H7sSsE2t6Kca0lfwTK8JdoNGS/yzM/4iH5I=
 github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.224 h1:bw9hO+U1og5eyvQTa06BwDGhvUVtD13ECRRadfJ60dc=
 github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.224/go.mod h1:UbBr6nzti67wv3GWNg5R6RhxHLOEq3JI04tq/5u2+dQ=
+github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.226 h1:t2CIRFTw0uuE3w+1ErrAjAboFnsAMtK9FuGTHIMc+pg=
+github.com/cdklabs/awscdk-asset-awscli-go/awscliv1/v2 v2.2.226/go.mod h1:DdG63+hiLpqqBWufXgZDgXuZm31yQdTd96M2HyqQllQ=
 github.com/cdklabs/awscdk-asset-node-proxy-agent-go/nodeproxyagentv6/v2 v2.1.0 h1:kElXjprC8wkpJu58vp+WFH6z0AJw4zitg5iSKJPKe3c=
 github.com/cdklabs/awscdk-asset-node-proxy-agent-go/nodeproxyagentv6/v2 v2.1.0/go.mod h1:JY4UnvNa1YDGQ4H5wohXTHl6YVY3uCDUWl4JYUrQfb8=
 github.com/cdklabs/cloud-assembly-schema-go/awscdkcloudassemblyschema/v39 v39.2.20 h1:cUpx41bkIjtrkkoTkHfdR4CC5zMMWi/23eVpAQjcXPo=

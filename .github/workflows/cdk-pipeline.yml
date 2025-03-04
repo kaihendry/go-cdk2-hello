@@ -24,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
+      - uses: golang/govulncheck-action@v1
+      - uses: golangci/golangci-lint-action@v6
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
@@ -35,7 +37,6 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never
         env:
           DOMAIN: stghello.dabase.com
-          VERSION: ${{ github.sha }}
 
   production:
     runs-on: ubuntu-latest
@@ -60,4 +61,3 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never
         env:
           DOMAIN: hello.dabase.com
-          VERSION: ${{ github.sha }}

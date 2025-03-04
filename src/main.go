@@ -1,32 +1,36 @@
 package main
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
-
-	"github.com/apex/log"
-	jsonhandler "github.com/apex/log/handlers/json"
-	"github.com/apex/log/handlers/text"
+	"runtime/debug"
 
 	"github.com/apex/gateway/v2"
 )
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Version", os.Getenv("VERSION"))
-		w.Write([]byte("Hallo World ... " + os.Getenv("VERSION")))
+		// get vcs version
+		build, ok := debug.ReadBuildInfo()
+		if !ok {
+			http.Error(w, "No build info available", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("X-Version", build.Main.Version)
+		w.Write([]byte("Hallo World ... " + build.Main.Version))
 	})
 
-	port := os.Getenv("_LAMBDA_SERVER_PORT")
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	var err error
 
-	if port == "" {
-		log.SetHandler(text.Default)
-		err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	} else {
-		log.SetHandler(jsonhandler.Default)
+	if _, ok := os.LookupEnv("AWS_LAMBDA_FUNCTION_NAME"); ok {
 		err = gateway.ListenAndServe("", nil)
+	} else {
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
+		err = http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), nil)
 	}
-	log.Fatalf("failed to start server: %v", err)
+	slog.Error("error listening", "error", err)
 }
