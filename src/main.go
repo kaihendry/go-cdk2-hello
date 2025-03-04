@@ -12,14 +12,16 @@ import (
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// get vcs version
 		build, ok := debug.ReadBuildInfo()
 		if !ok {
 			http.Error(w, "No build info available", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("X-Version", build.Main.Version)
-		w.Write([]byte("Hallo World ... " + build.Main.Version))
+		_, err := w.Write([]byte("Hallo World ... " + build.Main.Version))
+		if err != nil {
+			slog.Error("error writing response", "error", err)
+		}
 	})
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
