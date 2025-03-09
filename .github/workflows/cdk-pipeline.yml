@@ -2,6 +2,8 @@ name: Deploy Go via CDK
 
 env:
   AWSCERT: arn:aws:acm:eu-west-2:407461997746:certificate/9083a66b-72b6-448d-9bce-6ee2e2e52e36
+  CLOUDFLARE_ACCOUNT_ID: "212aab16e8e2f88974a456b8097b2726"
+  CLOUDFLARE_ZONE_ID: "dabase.com"
 
 on:
   schedule:
@@ -37,6 +39,19 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: stghello.dabase.com
+      - name: Update Cloudflare DNS
+        run: |
+          APIGATEWAY_DOMAIN=$(jq -r '."stghello-dabase-com".APIGatewayDomain' outputs.json)
+          # Get the DNS record ID first
+          RECORD_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records?type=CNAME&name=stghello.dabase.com" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | jq -r '.result[0].id')
+          
+          # Update the CNAME record
+          curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records/$RECORD_ID" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"CNAME\",\"name\":\"stghello\",\"content\":\"$APIGATEWAY_DOMAIN\",\"ttl\":1,\"proxied\":false}"
       - name: Verify DNS
         run: |
           EXPECTED=$(jq -r '."stghello-dabase-com".APIGatewayDomain' outputs.json)
@@ -69,6 +84,19 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: hello.dabase.com
+      - name: Update Cloudflare DNS
+        run: |
+          APIGATEWAY_DOMAIN=$(jq -r '."hello-dabase-com".APIGatewayDomain' outputs.json)
+          # Get the DNS record ID first
+          RECORD_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records?type=CNAME&name=hello.dabase.com" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" | jq -r '.result[0].id')
+          
+          # Update the CNAME record
+          curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records/$RECORD_ID" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"CNAME\",\"name\":\"hello\",\"content\":\"$APIGATEWAY_DOMAIN\",\"ttl\":1,\"proxied\":false}"
       - name: Verify DNS
         run: |
           EXPECTED=$(jq -r '."hello-dabase-com".APIGatewayDomain' outputs.json)
