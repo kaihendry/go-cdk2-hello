@@ -73,8 +73,20 @@ func NewGStack(scope constructs.Construct, id string, props *GStackProps) awscdk
 
 	awscdk.NewCfnOutput(
 		stack,
-		jsii.String("API Endpoint"),
+		jsii.String("APIEndpoint"),
 		&awscdk.CfnOutputProps{Value: httpApi.Url(), Description: jsii.String("API Gateway endpoint")},
+	)
+
+	awscdk.NewCfnOutput(
+		stack,
+		jsii.String("APIGatewayDomain"),
+		&awscdk.CfnOutputProps{Value: dn.RegionalDomainName(), Description: jsii.String("API Gateway domain name")},
+	)
+
+	awscdk.NewCfnOutput(
+		stack,
+		jsii.String("CustomDomain"),
+		&awscdk.CfnOutputProps{Value: jsii.String(domainName), Description: jsii.String("Custom domain name")},
 	)
 
 	return stack

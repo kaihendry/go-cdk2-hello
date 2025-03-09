@@ -34,9 +34,12 @@ jobs:
       - name: Run CDK deploy
         run: |
           make -C src/
-          npx aws-cdk@2.x deploy --require-approval never
+          npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: stghello.dabase.com
+      - name: Verify DNS
+        run: '[ "$(jq -r ''."stghello-dabase-com".APIGatewayDomain'' outputs.json)" = "$(dig +short CNAME stghello.dabase.com | tr -d .)" ]'
+      - run: curl https://stghello.dabase.com
 
   production:
     runs-on: ubuntu-latest
@@ -58,6 +61,9 @@ jobs:
       - name: Run CDK deploy
         run: |
           make -C src/
-          npx aws-cdk@2.x deploy --require-approval never
+          npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: hello.dabase.com
+      - name: Verify DNS
+        run: '[ "$(jq -r ''."hello-dabase-com".APIGatewayDomain'' outputs.json)" = "$(dig +short CNAME hello.dabase.com | tr -d .)" ]'
+      - run: curl https://hello.dabase.com
