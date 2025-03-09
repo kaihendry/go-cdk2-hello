@@ -38,7 +38,12 @@ jobs:
         env:
           DOMAIN: stghello.dabase.com
       - name: Verify DNS
-        run: '[ "$(jq -r ''."stghello-dabase-com".APIGatewayDomain'' outputs.json)" = "$(dig +short CNAME stghello.dabase.com | tr -d .)" ]'
+        run: |
+          EXPECTED=$(jq -r '."stghello-dabase-com".APIGatewayDomain' outputs.json)
+          ACTUAL=$(dig +short CNAME stghello.dabase.com | tr -d .)
+          echo "Expected API Gateway Domain: $EXPECTED"
+          echo "Actual CNAME record: $ACTUAL"
+          [ "$EXPECTED" = "$ACTUAL" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
       - run: curl https://stghello.dabase.com
 
   production:
@@ -65,5 +70,10 @@ jobs:
         env:
           DOMAIN: hello.dabase.com
       - name: Verify DNS
-        run: '[ "$(jq -r ''."hello-dabase-com".APIGatewayDomain'' outputs.json)" = "$(dig +short CNAME hello.dabase.com | tr -d .)" ]'
+        run: |
+          EXPECTED=$(jq -r '."hello-dabase-com".APIGatewayDomain' outputs.json)
+          ACTUAL=$(dig +short CNAME hello.dabase.com | tr -d .)
+          echo "Expected API Gateway Domain: $EXPECTED"
+          echo "Actual CNAME record: $ACTUAL"
+          [ "$EXPECTED" = "$ACTUAL" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
       - run: curl https://hello.dabase.com
