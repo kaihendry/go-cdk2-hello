@@ -59,7 +59,7 @@ jobs:
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: $ACTUAL"
           [ "$EXPECTED" = "$ACTUAL" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
-      - run: curl https://stghello.dabase.com
+      - run: curl -is https://stghello.dabase.com | grep x-version | grep ${GITHUB_SHA::7}
 
   production:
     runs-on: ubuntu-latest
@@ -104,4 +104,5 @@ jobs:
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: $ACTUAL"
           [ "$EXPECTED" = "$ACTUAL" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
-      - run: curl https://hello.dabase.com
+      - run: curl -is https://hello.dabase.com | grep x-version | grep ${GITHUB_SHA::7}
+
