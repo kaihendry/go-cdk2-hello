@@ -3,8 +3,8 @@ github.com/Masterminds/semver/v3 v3.3.1 h1:QtNSWtVZ3nBfk8mAOu/B6v7FMJ+NHTIgUPi7r
 github.com/Masterminds/semver/v3 v3.3.1/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/apex/gateway/v2 v2.0.0 h1:tJwKiB7ObbXuF3yoqTf/CfmaZRhHB+GfilTNSCf1Wnc=
 github.com/apex/gateway/v2 v2.0.0/go.mod h1:y+uuK0JxdvTHZeVns501/7qklBhnDHtGU0hfUQ6QIfI=
-github.com/aws/aws-cdk-go/awscdk/v2 v2.185.0 h1:9GW3260WNV5FzKcV8joMKIo41JF1GZuEDn9berevbUs=
-github.com/aws/aws-cdk-go/awscdk/v2 v2.185.0/go.mod h1:DPhzICINlx7zXMrKjRGuta/bAAAaeBQbeStBzf8JHVI=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.186.0 h1:i10MWpK0tiwNXs5j3HRv+NGsvZsYD2QwDjVGhoSA6rY=
+github.com/aws/aws-cdk-go/awscdk/v2 v2.186.0/go.mod h1:DPhzICINlx7zXMrKjRGuta/bAAAaeBQbeStBzf8JHVI=
 github.com/aws/aws-lambda-go v1.17.0/go.mod h1:FEwgPLE6+8wcGBTe5cJN3JWurd1Ztm9zN4jsXsjzKKw=
 github.com/aws/aws-lambda-go v1.34.1 h1:M3a/uFYBjii+tDcOJ0wL/WyFi2550FHoECdPf27zvOs=
 github.com/aws/aws-lambda-go v1.34.1/go.mod h1:jwFe2KmMsHmffA1X2R09hH6lFzJQxzI8qK17ewzbQMM=
