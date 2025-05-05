@@ -61,12 +61,19 @@ deploy() {
 
     # Update Lambda function code using AWS CLI
     echo "Updating Lambda function code for $LAMBDA_FUNCTION_NAME..."
-    if ! aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --s3-bucket "$BUCKET_NAME" --s3-key "$S3_KEY"; then
+    if ! aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --s3-bucket "$BUCKET_NAME" --s3-key "$S3_KEY" --no-cli-pager; then
         echo "Lambda update failed!"
         return 1
     fi
 
-    echo "Lambda function updated successfully!"
+    # Wait for the update to complete
+    echo "Waiting for Lambda function update to complete..."
+    if ! aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_NAME"; then
+        echo "Lambda function update wait failed!"
+        return 1
+    fi
+
+    echo "Lambda function update complete!"
 }
 
 # Watch src/main.go and run the deploy function on changes
@@ -75,4 +82,20 @@ export LAMBDA_FUNCTION_NAME
 export BUCKET_NAME
 export S3_KEY
 export S3_DESTINATION
-echo src/main.go | entr -n -r bash -c "$(declare -f deploy); deploy"
+
+# If run directly with `--watch`, start the watch loop
+if [[ "$1" == "--watch" ]]; then
+    # Use a here-string to pass file list to entr
+    find src -type f \
+        ! -name 'bootstrap' \
+        ! -name 'function.zip' \
+        ! -name '*.zip' |
+        entr -r "$0"
+    exit
+fi
+
+# Otherwise, just run deploy
+deploy
+# curl APIEndpoint
+echo "Invoking the updated function..."
+curl $(jq -r '."stghello-dabase-com".APIEndpoint' outputs.json)

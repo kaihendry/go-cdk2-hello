@@ -18,7 +18,7 @@ func main() {
 			return
 		}
 		w.Header().Set("X-Version", build.Main.Version)
-		_, err := w.Write([]byte("Lets TESTING World ... " + build.Main.Version))
+		_, err := w.Write([]byte("THREE World ... " + build.Main.Version))
 		if err != nil {
 			slog.Error("error writing response", "error", err)
 		}
