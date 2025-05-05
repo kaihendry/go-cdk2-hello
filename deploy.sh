@@ -3,29 +3,6 @@
 # Exit on error
 set -e
 
-# Check if entr is installed
-if ! command -v entr >/dev/null 2>&1; then
-    echo "entr is required but not installed. Please install it first."
-    echo "On macOS: brew install entr"
-    echo "On Linux: sudo apt-get install entr"
-    exit 1
-fi
-
-# Check if aws cli is installed
-if ! command -v aws >/dev/null 2>&1; then
-    echo "AWS CLI is required but not installed. Please install it first."
-    echo "See: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
-    exit 1
-fi
-
-# Check if jq is installed
-if ! command -v jq >/dev/null 2>&1; then
-    echo "jq is required but not installed. Please install it first."
-    echo "On macOS: brew install jq"
-    echo "On Linux: sudo apt-get install jq"
-    exit 1
-fi
-
 # Check if CDK_STACK_NAME is set
 if [ -z "$CDK_STACK_NAME" ]; then
     echo "Error: CDK_STACK_NAME environment variable is not set."
