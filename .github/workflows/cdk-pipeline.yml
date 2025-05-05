@@ -50,7 +50,7 @@ jobs:
             echo "Error: outputs.json not found!"
             exit 1
           fi
-          if ! jq -e ".$STACK_NAME" outputs.json > /dev/null; then
+          if ! jq -e ".\"$STACK_NAME\"" outputs.json > /dev/null; then
             echo "Error: Stack '$STACK_NAME' not found in outputs.json"
             cat outputs.json
             exit 1
@@ -59,7 +59,7 @@ jobs:
             value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
             echo "$key=$value" >> "$GITHUB_ENV"
             echo "Set environment variable: $key=***"
-          done < <(jq -r ".$STACK_NAME | to_entries[] | .key + \"=\" + .value" outputs.json)
+          done < <(jq -r ".\"$STACK_NAME\" | to_entries[] | .key + \"=\" + .value" outputs.json)
           echo "Finished setting environment variables from CDK outputs."
       - name: Deploy Lambda code via script
         run: ./deploy.sh
@@ -129,7 +129,7 @@ jobs:
             echo "Error: outputs.json not found!"
             exit 1
           fi
-          if ! jq -e ".$STACK_NAME" outputs.json > /dev/null; then
+          if ! jq -e ".\"$STACK_NAME\"" outputs.json > /dev/null; then
             echo "Error: Stack '$STACK_NAME' not found in outputs.json"
             cat outputs.json
             exit 1
@@ -138,7 +138,7 @@ jobs:
             value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
             echo "$key=$value" >> "$GITHUB_ENV"
             echo "Set environment variable: $key=***"
-          done < <(jq -r ".$STACK_NAME | to_entries[] | .key + \"=\" + .value" outputs.json)
+          done < <(jq -r ".\"$STACK_NAME\" | to_entries[] | .key + \"=\" + .value" outputs.json)
           echo "Finished setting environment variables from CDK outputs."
       - name: Deploy Lambda code via script
         run: ./deploy.sh
