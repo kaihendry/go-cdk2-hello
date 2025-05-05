@@ -33,9 +33,12 @@ jobs:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: eu-west-2
       - uses: actions/setup-node@v4
+      - name: Build Go Lambda binary
+        run: make -C src/
+      - name: Upload Lambda code to S3
+        run: aws s3 cp src/function.zip s3://hendry-lambdas/go-cdk2-hello/function.zip
       - name: Run CDK deploy
         run: |
-          make -C src/
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: stghello.dabase.com
@@ -71,16 +74,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-      - run: |
-          make -C src/ build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: eu-west-2
       - uses: actions/setup-node@v4
+      - name: Build Go Lambda binary
+        run: make -C src/
+      - name: Upload Lambda code to S3
+        run: aws s3 cp src/function.zip s3://hendry-lambdas/go-cdk2-hello/function.zip
       - name: Run CDK deploy
         run: |
-          make -C src/
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: hello.dabase.com

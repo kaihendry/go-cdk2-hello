@@ -88,7 +88,6 @@ if [[ "$1" == "--watch" ]]; then
     # Use a here-string to pass file list to entr
     find src -type f \
         ! -name 'bootstrap' \
-        ! -name 'function.zip' \
         ! -name '*.zip' |
         entr -r "$0"
     exit
