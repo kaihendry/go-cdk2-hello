@@ -30,12 +30,9 @@ S3_DESTINATION="s3://${BUCKET_NAME}/${S3_KEY}"
 
 echo "Found Lambda function: $LAMBDA_FUNCTION_NAME"
 echo "Target S3 location: $S3_DESTINATION"
-echo "Watching for changes in src/main.go..."
 
 # The deploy function that will be run when changes are detected
 deploy() {
-    echo "Change detected in main.go, rebuilding..."
-
     # Build the project (creates src/function.zip)
     if ! make -C src/; then
         echo "Build failed!"

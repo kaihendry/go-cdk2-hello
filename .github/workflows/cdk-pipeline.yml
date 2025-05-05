@@ -41,30 +41,38 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: ${{ env.STAGING_DOMAIN }}
-      - name: Read CDK outputs
+      - name: Read CDK outputs and set env var
         id: cdk-outputs
-        run: echo "api_domain=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_OUTPUT
+        run: echo "API_DOMAIN_VALUE=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_ENV
       - name: Deploy Lambda code via script
         run: ./deploy.sh
         env:
           CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
       - name: Verify deployment on API Gateway domain
         run: |
-          echo "Verifying deployment at https://${{ steps.cdk-outputs.outputs.api_domain }} with Host header ${{ env.STAGING_DOMAIN }}"
-          curl -is -H "Host: ${{ env.STAGING_DOMAIN }}" https://${{ steps.cdk-outputs.outputs.api_domain }} | grep x-version | grep ${GITHUB_SHA::7}
+          echo "Verifying deployment at https://${{ env.API_DOMAIN_VALUE }} with Host header ${{ env.STAGING_DOMAIN }}"
+          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
+            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify deployment."
+            exit 1
+          fi
+          curl -is -H "Host: ${{ env.STAGING_DOMAIN }}" https://${{ env.API_DOMAIN_VALUE }} | grep x-version | grep ${GITHUB_SHA::7}
       - name: Update Cloudflare DNS
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: "CNAME"
           name: ${{ env.STAGING_DOMAIN }}
-          content: ${{ steps.cdk-outputs.outputs.api_domain }}
+          content: ${{ env.API_DOMAIN_VALUE }}
           ttl: 1
           proxied: false
           token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
       - name: Verify DNS
         run: |
-          EXPECTED=${{ steps.cdk-outputs.outputs.api_domain }}
+          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
+            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify DNS."
+            exit 1
+          fi
+          EXPECTED=${{ env.API_DOMAIN_VALUE }}
           ACTUAL=$(dig +short CNAME ${{ env.STAGING_DOMAIN }})
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: ${ACTUAL%.}"
@@ -95,30 +103,38 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: ${{ env.PRODUCTION_DOMAIN }}
-      - name: Read CDK outputs
+      - name: Read CDK outputs and set env var
         id: cdk-outputs-prod
-        run: echo "api_domain=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_OUTPUT
+        run: echo "API_DOMAIN_VALUE=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_ENV
       - name: Deploy Lambda code via script
         run: ./deploy.sh
         env:
           CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
       - name: Verify deployment on API Gateway domain
         run: |
-          echo "Verifying deployment at https://${{ steps.cdk-outputs-prod.outputs.api_domain }} with Host header ${{ env.PRODUCTION_DOMAIN }}"
-          curl -is -H "Host: ${{ env.PRODUCTION_DOMAIN }}" https://${{ steps.cdk-outputs-prod.outputs.api_domain }} | grep x-version | grep ${GITHUB_SHA::7}
+          echo "Verifying deployment at https://${{ env.API_DOMAIN_VALUE }} with Host header ${{ env.PRODUCTION_DOMAIN }}"
+          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
+            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify deployment."
+            exit 1
+          fi
+          curl -is -H "Host: ${{ env.PRODUCTION_DOMAIN }}" https://${{ env.API_DOMAIN_VALUE }} | grep x-version | grep ${GITHUB_SHA::7}
       - name: Update Cloudflare DNS
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: "CNAME"
           name: ${{ env.PRODUCTION_DOMAIN }}
-          content: ${{ steps.cdk-outputs-prod.outputs.api_domain }}
+          content: ${{ env.API_DOMAIN_VALUE }}
           ttl: 1
           proxied: false
           token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
       - name: Verify DNS
         run: |
-          EXPECTED=${{ steps.cdk-outputs-prod.outputs.api_domain }}
+          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
+            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify DNS."
+            exit 1
+          fi
+          EXPECTED=${{ env.API_DOMAIN_VALUE }}
           ACTUAL=$(dig +short CNAME ${{ env.PRODUCTION_DOMAIN }})
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: ${ACTUAL%.}"
