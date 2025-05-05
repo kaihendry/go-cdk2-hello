@@ -22,7 +22,10 @@ jobs:
     name: Deploy to staging
     environment:
       name: staging
-      url: https://stghello.dabase.com
+      url: https://${{ env.STAGING_DOMAIN }}
+    env:
+      STAGING_DOMAIN: stghello.dabase.com
+      CDK_STACK_NAME: stghello-dabase-com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -33,23 +36,27 @@ jobs:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: eu-west-2
       - uses: actions/setup-node@v4
-      - name: Build Go Lambda binary
-        run: make -C src/
-      - name: Upload Lambda code to S3
-        run: aws s3 cp src/function.zip s3://hendry-lambdas/go-cdk2-hello/function.zip
       - name: Run CDK deploy
         run: |
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
-          DOMAIN: stghello.dabase.com
+          DOMAIN: ${{ env.STAGING_DOMAIN }}
       - name: Read CDK outputs
         id: cdk-outputs
-        run: echo "api_domain=$(jq -r '."stghello-dabase-com".APIGatewayDomain' outputs.json)" >> $GITHUB_OUTPUT
+        run: echo "api_domain=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_OUTPUT
+      - name: Deploy Lambda code via script
+        run: ./deploy.sh
+        env:
+          CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
+      - name: Verify deployment on API Gateway domain
+        run: |
+          echo "Verifying deployment at https://${{ steps.cdk-outputs.outputs.api_domain }} with Host header ${{ env.STAGING_DOMAIN }}"
+          curl -is -H "Host: ${{ env.STAGING_DOMAIN }}" https://${{ steps.cdk-outputs.outputs.api_domain }} | grep x-version | grep ${GITHUB_SHA::7}
       - name: Update Cloudflare DNS
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: "CNAME"
-          name: "stghello.dabase.com"
+          name: ${{ env.STAGING_DOMAIN }}
           content: ${{ steps.cdk-outputs.outputs.api_domain }}
           ttl: 1
           proxied: false
@@ -57,12 +64,13 @@ jobs:
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
       - name: Verify DNS
         run: |
-          EXPECTED=$(jq -r '."stghello-dabase-com".APIGatewayDomain' outputs.json)
-          ACTUAL=$(dig +short CNAME stghello.dabase.com)
+          EXPECTED=${{ steps.cdk-outputs.outputs.api_domain }}
+          ACTUAL=$(dig +short CNAME ${{ env.STAGING_DOMAIN }})
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: ${ACTUAL%.}"
           [ "$EXPECTED" = "${ACTUAL%.}" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
-      - run: curl -is https://stghello.dabase.com | grep x-version | grep ${GITHUB_SHA::7}
+      - name: Verify deployment on custom domain
+        run: curl -is https://${{ env.STAGING_DOMAIN }} | grep x-version | grep ${GITHUB_SHA::7}
 
   production:
     runs-on: ubuntu-latest
@@ -70,7 +78,10 @@ jobs:
     name: Deploy to production
     environment:
       name: production
-      url: https://hello.dabase.com
+      url: https://${{ env.PRODUCTION_DOMAIN }}
+    env:
+      PRODUCTION_DOMAIN: hello.dabase.com
+      CDK_STACK_NAME: hello-dabase-com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -79,23 +90,27 @@ jobs:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: eu-west-2
       - uses: actions/setup-node@v4
-      - name: Build Go Lambda binary
-        run: make -C src/
-      - name: Upload Lambda code to S3
-        run: aws s3 cp src/function.zip s3://hendry-lambdas/go-cdk2-hello/function.zip
       - name: Run CDK deploy
         run: |
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
-          DOMAIN: hello.dabase.com
+          DOMAIN: ${{ env.PRODUCTION_DOMAIN }}
       - name: Read CDK outputs
         id: cdk-outputs-prod
-        run: echo "api_domain=$(jq -r '."hello-dabase-com".APIGatewayDomain' outputs.json)" >> $GITHUB_OUTPUT
+        run: echo "api_domain=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_OUTPUT
+      - name: Deploy Lambda code via script
+        run: ./deploy.sh
+        env:
+          CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
+      - name: Verify deployment on API Gateway domain
+        run: |
+          echo "Verifying deployment at https://${{ steps.cdk-outputs-prod.outputs.api_domain }} with Host header ${{ env.PRODUCTION_DOMAIN }}"
+          curl -is -H "Host: ${{ env.PRODUCTION_DOMAIN }}" https://${{ steps.cdk-outputs-prod.outputs.api_domain }} | grep x-version | grep ${GITHUB_SHA::7}
       - name: Update Cloudflare DNS
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: "CNAME"
-          name: "hello.dabase.com"
+          name: ${{ env.PRODUCTION_DOMAIN }}
           content: ${{ steps.cdk-outputs-prod.outputs.api_domain }}
           ttl: 1
           proxied: false
@@ -103,10 +118,11 @@ jobs:
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
       - name: Verify DNS
         run: |
-          EXPECTED=$(jq -r '."hello-dabase-com".APIGatewayDomain' outputs.json)
-          ACTUAL=$(dig +short CNAME hello.dabase.com)
+          EXPECTED=${{ steps.cdk-outputs-prod.outputs.api_domain }}
+          ACTUAL=$(dig +short CNAME ${{ env.PRODUCTION_DOMAIN }})
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: ${ACTUAL%.}"
           [ "$EXPECTED" = "${ACTUAL%.}" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
-      - run: curl -is https://hello.dabase.com | grep x-version | grep ${GITHUB_SHA::7}
+      - name: Verify deployment on custom domain
+        run: curl -is https://${{ env.PRODUCTION_DOMAIN }} | grep x-version | grep ${GITHUB_SHA::7}
 

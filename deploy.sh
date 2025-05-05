@@ -18,16 +18,31 @@ if ! command -v aws >/dev/null 2>&1; then
     exit 1
 fi
 
-# Get values from outputs.json
-if [ ! -f outputs.json ]; then
-    echo "outputs.json not found. Please run 'cdk deploy' first."
+# Check if jq is installed
+if ! command -v jq >/dev/null 2>&1; then
+    echo "jq is required but not installed. Please install it first."
+    echo "On macOS: brew install jq"
+    echo "On Linux: sudo apt-get install jq"
     exit 1
 fi
 
-# Get the Lambda function name from outputs.json
-LAMBDA_FUNCTION_NAME=$(jq -r '."stghello-dabase-com".LambdaFunctionName' outputs.json)
+# Check if CDK_STACK_NAME is set
+if [ -z "$CDK_STACK_NAME" ]; then
+    echo "Error: CDK_STACK_NAME environment variable is not set."
+    exit 1
+fi
+echo "Using CDK Stack Name: $CDK_STACK_NAME"
+
+# Get values from outputs.json
+if [ ! -f outputs.json ]; then
+    echo "outputs.json not found. Please run 'cdk deploy --outputs-file outputs.json' first."
+    exit 1
+fi
+
+# Get the Lambda function name from outputs.json using the stack name
+LAMBDA_FUNCTION_NAME=$(jq -r '."'$CDK_STACK_NAME'".LambdaFunctionName' outputs.json)
 if [ -z "$LAMBDA_FUNCTION_NAME" ] || [ "$LAMBDA_FUNCTION_NAME" = "null" ]; then
-    echo "Could not find LambdaFunctionName in outputs.json. Please run 'cdk deploy' first."
+    echo "Could not find LambdaFunctionName for stack '$CDK_STACK_NAME' in outputs.json."
     exit 1
 fi
 
@@ -97,4 +112,9 @@ fi
 deploy
 # curl APIEndpoint
 echo "Invoking the updated function..."
-curl $(jq -r '."stghello-dabase-com".APIEndpoint' outputs.json)
+API_ENDPOINT=$(jq -r '."'$CDK_STACK_NAME'".APIEndpoint' outputs.json)
+if [ -z "$API_ENDPOINT" ] || [ "$API_ENDPOINT" = "null" ]; then
+    echo "Could not find APIEndpoint for stack '$CDK_STACK_NAME' in outputs.json."
+    exit 1
+fi
+curl "$API_ENDPOINT"
