@@ -1,4 +1,7 @@
+WARNING: This is an experiment looking into speeding up iterations with `aws lambda update-function-code`.
+
 # Go Hello World using AWS CDK 2
+
 
 ## Environment variables in .github/workflows
 
