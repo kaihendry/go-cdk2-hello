@@ -41,38 +41,55 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: ${{ env.STAGING_DOMAIN }}
-      - name: Read CDK outputs and set env var
+      - name: Read CDK outputs and set env vars
         id: cdk-outputs
-        run: echo "API_DOMAIN_VALUE=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_ENV
+        run: |
+          STACK_NAME="${{ env.CDK_STACK_NAME }}"
+          echo "Reading outputs for stack: $STACK_NAME from outputs.json"
+          if [ ! -f outputs.json ]; then
+            echo "Error: outputs.json not found!"
+            exit 1
+          fi
+          if ! jq -e ".$STACK_NAME" outputs.json > /dev/null; then
+            echo "Error: Stack '$STACK_NAME' not found in outputs.json"
+            cat outputs.json
+            exit 1
+          fi
+          while IFS='=' read -r key value; do
+            value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+            echo "$key=$value" >> "$GITHUB_ENV"
+            echo "Set environment variable: $key=***"
+          done < <(jq -r ".$STACK_NAME | to_entries[] | .key + \"=\" + .value" outputs.json)
+          echo "Finished setting environment variables from CDK outputs."
       - name: Deploy Lambda code via script
         run: ./deploy.sh
         env:
           CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
       - name: Verify deployment on API Gateway domain
         run: |
-          echo "Verifying deployment at https://${{ env.API_DOMAIN_VALUE }} with Host header ${{ env.STAGING_DOMAIN }}"
-          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
-            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify deployment."
+          echo "Verifying deployment at https://${{ env.APIGatewayDomain }} with Host header ${{ env.STAGING_DOMAIN }}"
+          if [ -z "${{ env.APIGatewayDomain }}" ]; then
+            echo "Error: env.APIGatewayDomain is empty. Cannot verify deployment."
             exit 1
           fi
-          curl -is -H "Host: ${{ env.STAGING_DOMAIN }}" https://${{ env.API_DOMAIN_VALUE }} | grep x-version | grep ${GITHUB_SHA::7}
+          curl -is -H "Host: ${{ env.STAGING_DOMAIN }}" https://${{ env.APIGatewayDomain }} | grep x-version | grep ${GITHUB_SHA::7}
       - name: Update Cloudflare DNS
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: "CNAME"
           name: ${{ env.STAGING_DOMAIN }}
-          content: ${{ env.API_DOMAIN_VALUE }}
+          content: ${{ env.APIGatewayDomain }}
           ttl: 1
           proxied: false
           token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
       - name: Verify DNS
         run: |
-          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
-            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify DNS."
+          if [ -z "${{ env.APIGatewayDomain }}" ]; then
+            echo "Error: env.APIGatewayDomain is empty. Cannot verify DNS."
             exit 1
           fi
-          EXPECTED=${{ env.API_DOMAIN_VALUE }}
+          EXPECTED=${{ env.APIGatewayDomain }}
           ACTUAL=$(dig +short CNAME ${{ env.STAGING_DOMAIN }})
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: ${ACTUAL%.}"
@@ -103,38 +120,55 @@ jobs:
           npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
         env:
           DOMAIN: ${{ env.PRODUCTION_DOMAIN }}
-      - name: Read CDK outputs and set env var
+      - name: Read CDK outputs and set env vars
         id: cdk-outputs-prod
-        run: echo "API_DOMAIN_VALUE=$(jq -r '.${{ env.CDK_STACK_NAME }}.APIGatewayDomain' outputs.json)" >> $GITHUB_ENV
+        run: |
+          STACK_NAME="${{ env.CDK_STACK_NAME }}"
+          echo "Reading outputs for stack: $STACK_NAME from outputs.json"
+          if [ ! -f outputs.json ]; then
+            echo "Error: outputs.json not found!"
+            exit 1
+          fi
+          if ! jq -e ".$STACK_NAME" outputs.json > /dev/null; then
+            echo "Error: Stack '$STACK_NAME' not found in outputs.json"
+            cat outputs.json
+            exit 1
+          fi
+          while IFS='=' read -r key value; do
+            value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+            echo "$key=$value" >> "$GITHUB_ENV"
+            echo "Set environment variable: $key=***"
+          done < <(jq -r ".$STACK_NAME | to_entries[] | .key + \"=\" + .value" outputs.json)
+          echo "Finished setting environment variables from CDK outputs."
       - name: Deploy Lambda code via script
         run: ./deploy.sh
         env:
           CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
       - name: Verify deployment on API Gateway domain
         run: |
-          echo "Verifying deployment at https://${{ env.API_DOMAIN_VALUE }} with Host header ${{ env.PRODUCTION_DOMAIN }}"
-          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
-            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify deployment."
+          echo "Verifying deployment at https://${{ env.APIGatewayDomain }} with Host header ${{ env.PRODUCTION_DOMAIN }}"
+          if [ -z "${{ env.APIGatewayDomain }}" ]; then
+            echo "Error: env.APIGatewayDomain is empty. Cannot verify deployment."
             exit 1
           fi
-          curl -is -H "Host: ${{ env.PRODUCTION_DOMAIN }}" https://${{ env.API_DOMAIN_VALUE }} | grep x-version | grep ${GITHUB_SHA::7}
+          curl -is -H "Host: ${{ env.PRODUCTION_DOMAIN }}" https://${{ env.APIGatewayDomain }} | grep x-version | grep ${GITHUB_SHA::7}
       - name: Update Cloudflare DNS
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: "CNAME"
           name: ${{ env.PRODUCTION_DOMAIN }}
-          content: ${{ env.API_DOMAIN_VALUE }}
+          content: ${{ env.APIGatewayDomain }}
           ttl: 1
           proxied: false
           token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
       - name: Verify DNS
         run: |
-          if [ -z "${{ env.API_DOMAIN_VALUE }}" ]; then
-            echo "Error: API_DOMAIN_VALUE is empty. Cannot verify DNS."
+          if [ -z "${{ env.APIGatewayDomain }}" ]; then
+            echo "Error: env.APIGatewayDomain is empty. Cannot verify DNS."
             exit 1
           fi
-          EXPECTED=${{ env.API_DOMAIN_VALUE }}
+          EXPECTED=${{ env.APIGatewayDomain }}
           ACTUAL=$(dig +short CNAME ${{ env.PRODUCTION_DOMAIN }})
           echo "Expected API Gateway Domain: $EXPECTED"
           echo "Actual CNAME record: ${ACTUAL%.}"
