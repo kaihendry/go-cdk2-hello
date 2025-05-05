@@ -17,6 +17,19 @@ permissions:
   contents: read
 
 jobs:
+  run-go-checks:
+    name: Run Go Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Run Go vulnerability check
+        uses: golang/govulncheck-action@v1
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
+
   staging:
     runs-on: ubuntu-latest
     name: Deploy to staging
@@ -29,8 +42,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-      - uses: golang/govulncheck-action@v1
-      - uses: golangci/golangci-lint-action@v7
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
@@ -99,7 +110,7 @@ jobs:
 
   production:
     runs-on: ubuntu-latest
-    needs: staging
+    needs: [staging, run-go-checks]
     name: Deploy to production
     environment:
       name: production

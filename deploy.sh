@@ -91,4 +91,4 @@ if [ -z "$API_ENDPOINT" ] || [ "$API_ENDPOINT" = "null" ]; then
     echo "Could not find APIEndpoint for stack '$CDK_STACK_NAME' in outputs.json."
     exit 1
 fi
-curl "$API_ENDPOINT"
+curl -s "$API_ENDPOINT"
