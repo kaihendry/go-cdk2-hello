@@ -21,7 +21,7 @@ jobs:
     name: Run Go Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
       - name: Run Go vulnerability check
         uses: golang/govulncheck-action@v1
@@ -40,7 +40,7 @@ jobs:
       STAGING_DOMAIN: stghello.dabase.com
       CDK_STACK_NAME: stghello-dabase-com
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -119,7 +119,7 @@ jobs:
       PRODUCTION_DOMAIN: hello.dabase.com
       CDK_STACK_NAME: hello-dabase-com
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
       - uses: aws-actions/configure-aws-credentials@v4
         with:
