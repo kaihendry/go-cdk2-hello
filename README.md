@@ -6,6 +6,10 @@ currently support only Node.js, so this uses the
 [Lambda Web Adapter](https://github.com/aws/aws-lambda-web-adapter) layer instead.
 It listens on port 8080 and returns its Git revision in the body and `X-Version`.
 
+[SLOC history](https://kaihendry.github.io/go-cdk2-hello/) is published by
+[LessHero](https://github.com/kaihendry/lesshero) on every push to `main`.
+It counts tracked lines across Git history, excluding dependency lockfiles.
+
 ## Develop
 
 Use Node.js 24 (`.node-version`), the pnpm version pinned in `package.json`,
