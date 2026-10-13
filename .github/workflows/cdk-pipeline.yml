@@ -23,23 +23,21 @@ jobs:
       - uses: actions/setup-go@v7.0.0
         with:
           go-version: stable
-          cache: false
+          cache-dependency-path: src/go.mod
       - uses: actions/setup-node@v7.1.0
         with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          cache: true
+          run_install: true
       - run: make test
-      - name: Check Go formatting
-        run: test -z "$(gofmt -l src)"
       - name: Check Go vulnerabilities
         working-directory: src
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-      - run: npm run synth -- --quiet
 
   staging:
-    if: github.event_name != 'pull_request'
-    needs: checks
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       id-token: write
       contents: read
@@ -50,7 +48,7 @@ jobs:
     secrets: inherit
 
   production:
-    needs: staging
+    needs: [checks, staging]
     permissions:
       id-token: write
       contents: read

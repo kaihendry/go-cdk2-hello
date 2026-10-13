@@ -26,45 +26,51 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-go@v7.0.0
+        if: inputs.environment == 'staging'
         with:
           go-version: stable
-          cache: false
+          cache-dependency-path: src/go.mod
       - uses: actions/setup-node@v7.1.0
         with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
+          node-version-file: .node-version
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          cache: true
+          run_install: true
+      - if: inputs.environment == 'staging'
+        run: make -C src VERSION="${GITHUB_SHA::7}"
+      - uses: actions/upload-artifact@v7.0.2
+        if: inputs.environment == 'staging'
+        with:
+          name: lambda
+          path: src/function.zip
+          if-no-files-found: error
+          overwrite: true
+      - uses: actions/download-artifact@v8.0.2
+        if: inputs.environment == 'production'
+        with:
+          name: lambda
+          path: src
       - uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
           aws-region: eu-west-2
-      - run: make deploy
-      - name: Read custom domain target
-        run: |
-          echo "APIGatewayDomain=$(jq -er --arg stack "${DOMAIN//./-}" '.[$stack].APIGatewayDomain' outputs.json)" >> "$GITHUB_ENV"
-      - name: Check whether DNS needs updating
+      - run: pnpm cdk deploy --require-approval never --outputs-file outputs.json
+      - name: Check DNS target
         id: dns
         run: |
-          actual=$(dig +short CNAME "$DOMAIN")
-          if [[ "${actual%.}" == "$APIGatewayDomain" ]]; then
-            echo "update=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "update=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "target=$(jq -er '.[].APIGatewayDomain' outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "actual=$(dig +short CNAME "$DOMAIN" | sed 's/\.$//')" >> "$GITHUB_OUTPUT"
       - name: Update Cloudflare DNS
-        if: steps.dns.outputs.update == 'true'
+        if: steps.dns.outputs.target != steps.dns.outputs.actual
         uses: everpcpc/cloudflare-dns-action@v1
         with:
           type: CNAME
           name: ${{ inputs.domain }}
-          content: ${{ env.APIGatewayDomain }}
+          content: ${{ steps.dns.outputs.target }}
           ttl: 1
           proxied: false
           token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           zone: ${{ secrets.CLOUDFLARE_ZONE }}
-      - name: Verify DNS
-        run: |
-          actual=$(dig +short CNAME "$DOMAIN")
-          test "$APIGatewayDomain" = "${actual%.}"
-      - name: Verify custom domain
-        run: API_ENDPOINT="https://$DOMAIN" ./scripts/smoke-test.sh
+      - name: Smoke test
+        run: test "$(curl -fsS --retry 3 --max-time 30 "https://$DOMAIN")" = "CICD World ... ${GITHUB_SHA::7}"

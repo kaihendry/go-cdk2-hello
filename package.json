@@ -1,15 +1,14 @@
 {
   "name": "go-cdk2-hello",
   "private": true,
+  "packageManager": "pnpm@10.34.7",
   "scripts": {
     "check": "tsc --noEmit",
     "test": "tsx --test infra/*.test.ts",
-    "cdk": "cdk",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy --outputs-file outputs.json"
+    "cdk": "cdk"
   },
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
   },
   "dependencies": {
     "aws-cdk-lib": "2.273.0",

@@ -16,4 +16,4 @@ aws lambda update-function-code \
     --zip-file fileb://src/function.zip \
     --query '[FunctionName,LastModified]' --output text --no-cli-pager
 aws lambda wait function-updated-v2 --function-name "$function_name"
-./scripts/smoke-test.sh
+curl -fsS "$(jq -er --arg stack "$stack_name" '.[$stack].APIEndpoint' outputs.json)"

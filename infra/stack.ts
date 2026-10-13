@@ -1,7 +1,5 @@
-import { execFileSync } from "node:child_process";
 import * as path from "node:path";
 import {
-  AssetHashType,
   CfnOutput,
   Duration,
   Stack,
@@ -27,22 +25,6 @@ export class HelloStack extends Stack {
       throw new Error("Set both DOMAIN and AWSCERT, or leave both unset.");
     }
 
-    const sourceDir = path.join(__dirname, "..", "src");
-    const code = props.code ?? lambda.Code.fromAsset(sourceDir, {
-      assetHashType: AssetHashType.OUTPUT,
-      bundling: {
-        image: lambda.Runtime.PROVIDED_AL2023.bundlingImage,
-        local: {
-          tryBundle(outputDir: string): boolean {
-            execFileSync("make", ["-C", sourceDir, "bundle", `OUT_DIR=${outputDir}`], {
-              stdio: "inherit",
-            });
-            return true;
-          },
-        },
-      },
-    });
-
     const adapter = lambda.LayerVersion.fromLayerVersionArn(
       this,
       "WebAdapter",
@@ -54,7 +36,7 @@ export class HelloStack extends Stack {
       runtime: lambda.Runtime.PROVIDED_AL2023,
       architecture: lambda.Architecture.ARM_64,
       handler: "bootstrap",
-      code,
+      code: props.code ?? lambda.Code.fromAsset(path.join(__dirname, "..", "src", "function.zip")),
       timeout: Duration.seconds(10),
       layers: [adapter],
       environment: {

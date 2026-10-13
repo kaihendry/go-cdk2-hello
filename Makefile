@@ -1,18 +1,18 @@
 .PHONY: test synth deploy clean
 
 test:
-	cd src && go test -race ./...
-	cd src && go vet ./...
-	npm run check
-	npm test
-	bash -n deploy.sh scripts/smoke-test.sh
+	cd src && go test -race ./... && go vet ./...
+	pnpm check && pnpm test
+	test -z "$$(gofmt -l src)"
+	bash -n deploy.sh
 
 synth:
-	npm run synth
+	$(MAKE) -C src
+	pnpm cdk synth
 
 deploy:
-	npm run deploy -- --require-approval never
-	./scripts/smoke-test.sh
+	$(MAKE) -C src
+	pnpm cdk deploy --require-approval never --outputs-file outputs.json
 
 clean:
 	$(MAKE) -C src clean
