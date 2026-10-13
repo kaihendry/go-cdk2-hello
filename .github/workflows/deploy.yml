@@ -1,0 +1,70 @@
+name: Deploy environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      domain:
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: https://${{ inputs.domain }}
+    env:
+      DOMAIN: ${{ inputs.domain }}
+      AWSCERT: arn:aws:acm:eu-west-2:407461997746:certificate/9083a66b-72b6-448d-9bce-6ee2e2e52e36
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version: stable
+          cache: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
+          aws-region: eu-west-2
+      - run: make deploy
+      - name: Read custom domain target
+        run: |
+          echo "APIGatewayDomain=$(jq -er --arg stack "${DOMAIN//./-}" '.[$stack].APIGatewayDomain' outputs.json)" >> "$GITHUB_ENV"
+      - name: Check whether DNS needs updating
+        id: dns
+        run: |
+          actual=$(dig +short CNAME "$DOMAIN")
+          if [[ "${actual%.}" == "$APIGatewayDomain" ]]; then
+            echo "update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "update=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Update Cloudflare DNS
+        if: steps.dns.outputs.update == 'true'
+        uses: everpcpc/cloudflare-dns-action@v1
+        with:
+          type: CNAME
+          name: ${{ inputs.domain }}
+          content: ${{ env.APIGatewayDomain }}
+          ttl: 1
+          proxied: false
+          token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          zone: ${{ secrets.CLOUDFLARE_ZONE }}
+      - name: Verify DNS
+        run: |
+          actual=$(dig +short CNAME "$DOMAIN")
+          test "$APIGatewayDomain" = "${actual%.}"
+      - name: Verify custom domain
+        run: API_ENDPOINT="https://$DOMAIN" ./scripts/smoke-test.sh

@@ -1,65 +1,92 @@
-WARNING: This is an experiment looking into speeding up iterations with `aws lambda update-function-code`.
+# Go HTTP server with TypeScript CDK
 
-# Go Hello World using AWS CDK 2
+A standard Go `net/http` server on ARM64 Lambda, exposed through API Gateway HTTP
+API. TypeScript defines the infrastructure; the Go application has no external
+module dependencies. CDK builds the Linux binary locally and publishes a content
+addressed asset, so no Docker build or manually managed S3 bucket is needed.
 
+## Why Lambda Web Adapter?
 
-## Environment variables in .github/workflows
+[Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions.html)
+currently support only Node.js. To keep the application in Go, this project uses
+[AWS Lambda Web Adapter](https://github.com/aws/aws-lambda-web-adapter) as an AWS
+Lambda layer (ARM64 layer version 30), with the `provided.al2023` runtime. This
+removes `apex/gateway` and all Lambda-specific code from the application. It is a
+regular Lambda Event Function; it does not provide Web Functions' active CPU
+billing or automatic multi-region deployment.
 
-For example using DNS validation with wildcard *.dabase.com
+The adapter forwards requests to the Go server on port 8080. The executable is
+named `bootstrap`; this custom-runtime setup does not need an exec wrapper.
+API Gateway forwards all methods and paths to the server. Responses include the
+build's Git revision in `X-Version` and in `CICD World ... <version>`.
 
-    AWSCERT="arn:aws:acm:ap-southeast-1:407461997746:certificate/87b0fd84-fb44-4782-b7eb-d9c7f8714908"
-    DOMAIN="hello.dabase.com"
+## Local development and checks
 
-CI/CD deployment; [you need to adjust _role-to-assume_ for the workflow to work](https://youtu.be/WKzVqFsOBSE), once setup you avoid the need to setup AWS_SECRET_ACCESS_KEY credentials.
+Install Node.js 24+, npm, a supported Go release (at least 1.24), make, zip, the AWS
+CLI, and jq. The optional watch shortcut also needs ripgrep and entr.
 
-# To deploy to the cloud
+```sh
+npm ci
+make test
+cd src
+PORT=3000 go run .
+```
 
-    npx aws-cdk@2.x deploy
+The default port is 8080. A local `go run` reports version `dev`; deployment builds
+embed `git describe --always --dirty --abbrev=7`. Set `VERSION` to override it.
 
-# To develop locally with a live reloader
+## Deploy
 
-    cd src
-    go install github.com/cosmtrek/air@latest
-    PORT=3000 air
-    
-# Why?
+```sh
+export AWS_PROFILE=mine
+aws sso login
+npm ci
+# Only needed once per account/region if CDK isn't already bootstrapped:
+npm run cdk -- bootstrap
+make deploy
+```
 
-There are many ways to deploy a Go application to the AWS Cloud. I've explored them all.
+CDK uses the selected profile's account and region. `AWS_REGION` can override the
+region. Without domain configuration, the stack is `go-cdk2-hello` and the public
+HTTPS URL is written to `outputs.json`. `make deploy` verifies the body and version
+for GET, POST, PUT, DELETE, PATCH, OPTIONS, and HEAD, on both root and nested paths.
+The endpoint is public, just like the original hello-world API.
 
-## EC2
+Use `CDK_STACK_NAME` for an independent test stack. Custom domains are optional;
+set both `DOMAIN` and `AWSCERT` (an ACM certificate in the deployment region):
 
-Copy across the Go binary and put it behind an ALB or Caddy.
+```sh
+export DOMAIN=hello.example.com
+export AWSCERT=arn:aws:acm:eu-west-2:123456789012:certificate/your-certificate
+make deploy
+```
 
-Awkward and isn't serverless.
+The default stack name then becomes `hello-example-com`. Point its DNS CNAME to
+`APIGatewayDomain` from `outputs.json`. The GitHub workflow retains the existing
+staging/production domains, deployment role, certificate, and Cloudflare secrets.
+It runs checks before deploying staging, then deploys production after staging
+passes. DNS is updated only when the CNAME target changes. Dependabot checks npm,
+Go modules, and GitHub Actions weekly. Update the workflow settings when using
+another AWS account or domain.
 
-## Make a Docker image and deploy with Kubernetes
+## Fast code updates
 
-Have you lost your mind? This is incredibly complex and expensive way to deploy a Go application to the Cloud.
+After the initial CDK deployment, keep the same AWS profile and region:
 
-Good luck to you and your team.
+```sh
+./deploy.sh
+# Or rebuild and update whenever an existing source file changes:
+./deploy.sh --watch
+```
 
-And it's not serverless.
+This uploads the Go ZIP directly with `aws lambda update-function-code`, waits for
+the update, and runs the same HTTP smoke checks. It bypasses CloudFormation for
+code-only changes. Use `make deploy` for infrastructure or layer changes; CDK will
+publish the current source again as an asset. If `outputs.json` has multiple
+stacks, select one with `CDK_STACK_NAME`.
 
-## AWS Serverless Application Model (SAM)
+To remove a test deployment, use the same stack name, profile, and region:
 
-https://github.com/kaihendry/aws-sam-gateway-example
-
-An efficient usage of AWS native Cloudformation that requires Python tooling such as https://github.com/aws/aws-sam-cli
-
-## Apex Up
-
-Easiest though proprietary https://apex.sh/up/
-
-## Terraform
-
-Very awkward and slow to deploy and requires extra tooling.
-
-## AWS CDK
-
-Keep everything in Go, including the Infrastructure as Code.
-
-Warning experimental APIs: https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdkapigatewayv2alpha/v2
-
-# Related
-
-* https://www.go-on-aws.com/infrastructure-as-go/cdk-go/
+```sh
+npm run cdk -- destroy
+```

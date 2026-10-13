@@ -1,0 +1,24 @@
+{
+  "name": "go-cdk2-hello",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "tsx --test infra/*.test.ts",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --outputs-file outputs.json"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.273.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "aws-cdk": "2.1145.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}

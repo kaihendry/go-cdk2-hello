@@ -4,3 +4,5 @@ cdk.out
 bootstrap
 function.zip
 outputs.json
+
+node_modules/

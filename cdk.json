@@ -1,15 +1,20 @@
 {
-  "app": "go mod download && go run g.go",
+  "app": "npx tsx infra/app.ts",
   "watch": {
     "include": [
       "**"
     ],
     "exclude": [
       "README.md",
+      "node_modules",
+      "outputs.json",
+      "src/bootstrap",
+      "src/function.zip",
       "cdk*.json",
       "go.mod",
       "go.sum",
-      "**/*test.go"
+      "**/*test.go",
+      "**/*.test.ts"
     ]
   },
   "context": {

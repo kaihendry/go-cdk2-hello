@@ -5,34 +5,36 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"runtime/debug"
-
-	"github.com/apex/gateway/v2"
+	"time"
 )
 
-func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		build, ok := debug.ReadBuildInfo()
-		if !ok {
-			http.Error(w, "No build info available", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("X-Version", build.Main.Version)
-		_, err := w.Write([]byte("CICD World ... " + build.Main.Version))
-		if err != nil {
+// Set at build time so local, CDK, and fast code deployments report the same revision.
+var version = "dev"
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Version", version)
+	if r.Method != http.MethodHead {
+		if _, err := fmt.Fprint(w, "CICD World ... "+version); err != nil {
 			slog.Error("error writing response", "error", err)
 		}
-	})
-
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-
-	var err error
-
-	if _, ok := os.LookupEnv("AWS_LAMBDA_FUNCTION_NAME"); ok {
-		err = gateway.ListenAndServe("", nil)
-	} else {
-		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
-		err = http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("PORT")), nil)
 	}
-	slog.Error("error listening", "error", err)
+}
+
+func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           http.HandlerFunc(handler),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	slog.Info("listening", "address", server.Addr, "version", version)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		slog.Error("error listening", "error", err)
+		os.Exit(1)
+	}
 }

@@ -1,189 +1,61 @@
-name: Deploy Go via CDK
-
-env:
-  AWSCERT: arn:aws:acm:eu-west-2:407461997746:certificate/9083a66b-72b6-448d-9bce-6ee2e2e52e36
-  CLOUDFLARE_ACCOUNT_ID: "212aab16e8e2f88974a456b8097b2726"
-  CLOUDFLARE_ZONE_ID: "dabase.com"
+name: Deploy Go via TypeScript CDK
 
 on:
   schedule:
     - cron: 0 0 * * *
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
+concurrency:
+  group: cdk-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  run-go-checks:
-    name: Run Go Checks
+  checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-      - name: Run Go vulnerability check
-        uses: golang/govulncheck-action@v1
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v7
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
         with:
-          version: latest
+          go-version: stable
+          cache: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: make test
+      - name: Check Go formatting
+        run: test -z "$(gofmt -l src)"
+      - name: Check Go vulnerabilities
+        working-directory: src
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - run: npm run synth -- --quiet
 
   staging:
-    runs-on: ubuntu-latest
-    name: Deploy to staging
-    environment:
-      name: staging
-      url: https://${{ env.STAGING_DOMAIN }}
-    env:
-      STAGING_DOMAIN: stghello.dabase.com
-      CDK_STACK_NAME: stghello-dabase-com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
-          aws-region: eu-west-2
-      - uses: actions/setup-node@v4
-      - name: Run CDK deploy
-        run: |
-          npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
-        env:
-          DOMAIN: ${{ env.STAGING_DOMAIN }}
-      - name: Read CDK outputs and set env vars
-        id: cdk-outputs
-        run: |
-          STACK_NAME="${{ env.CDK_STACK_NAME }}"
-          echo "Reading outputs for stack: $STACK_NAME from outputs.json"
-          if [ ! -f outputs.json ]; then
-            echo "Error: outputs.json not found!"
-            exit 1
-          fi
-          if ! jq -e ".\"$STACK_NAME\"" outputs.json > /dev/null; then
-            echo "Error: Stack '$STACK_NAME' not found in outputs.json"
-            cat outputs.json
-            exit 1
-          fi
-          while IFS='=' read -r key value; do
-            value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
-            echo "$key=$value" >> "$GITHUB_ENV"
-            echo "Set environment variable: $key=***"
-          done < <(jq -r ".\"$STACK_NAME\" | to_entries[] | .key + \"=\" + .value" outputs.json)
-          echo "Finished setting environment variables from CDK outputs."
-      - name: Deploy Lambda code via script
-        run: ./deploy.sh
-        env:
-          CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
-      - name: Verify deployment on API Gateway domain
-        run: |
-          echo "Verifying deployment at https://${{ env.APIGatewayDomain }} with Host header ${{ env.STAGING_DOMAIN }}"
-          if [ -z "${{ env.APIGatewayDomain }}" ]; then
-            echo "Error: env.APIGatewayDomain is empty. Cannot verify deployment."
-            exit 1
-          fi
-          curl -is -H "Host: ${{ env.STAGING_DOMAIN }}" https://${{ env.APIGatewayDomain }} | grep x-version | grep ${GITHUB_SHA::7}
-      - name: Update Cloudflare DNS
-        uses: everpcpc/cloudflare-dns-action@v1
-        with:
-          type: "CNAME"
-          name: ${{ env.STAGING_DOMAIN }}
-          content: ${{ env.APIGatewayDomain }}
-          ttl: 1
-          proxied: false
-          token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          zone: ${{ secrets.CLOUDFLARE_ZONE }}
-      - name: Verify DNS
-        run: |
-          if [ -z "${{ env.APIGatewayDomain }}" ]; then
-            echo "Error: env.APIGatewayDomain is empty. Cannot verify DNS."
-            exit 1
-          fi
-          EXPECTED=${{ env.APIGatewayDomain }}
-          ACTUAL=$(dig +short CNAME ${{ env.STAGING_DOMAIN }})
-          echo "Expected API Gateway Domain: $EXPECTED"
-          echo "Actual CNAME record: ${ACTUAL%.}"
-          [ "$EXPECTED" = "${ACTUAL%.}" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
-      - name: Verify deployment on custom domain
-        run: curl -is https://${{ env.STAGING_DOMAIN }} | grep x-version | grep ${GITHUB_SHA::7}
+    if: github.event_name != 'pull_request'
+    needs: checks
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      domain: stghello.dabase.com
+    secrets: inherit
 
   production:
-    runs-on: ubuntu-latest
-    needs: [staging, run-go-checks]
-    name: Deploy to production
-    environment:
-      name: production
-      url: https://${{ env.PRODUCTION_DOMAIN }}
-    env:
-      PRODUCTION_DOMAIN: hello.dabase.com
-      CDK_STACK_NAME: hello-dabase-com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::407461997746:role/github-actions-Role-56IHHM969DKJ
-          aws-region: eu-west-2
-      - uses: actions/setup-node@v4
-      - name: Run CDK deploy
-        run: |
-          npx aws-cdk@2.x deploy --require-approval never --outputs-file outputs.json
-        env:
-          DOMAIN: ${{ env.PRODUCTION_DOMAIN }}
-      - name: Read CDK outputs and set env vars
-        id: cdk-outputs-prod
-        run: |
-          STACK_NAME="${{ env.CDK_STACK_NAME }}"
-          echo "Reading outputs for stack: $STACK_NAME from outputs.json"
-          if [ ! -f outputs.json ]; then
-            echo "Error: outputs.json not found!"
-            exit 1
-          fi
-          if ! jq -e ".\"$STACK_NAME\"" outputs.json > /dev/null; then
-            echo "Error: Stack '$STACK_NAME' not found in outputs.json"
-            cat outputs.json
-            exit 1
-          fi
-          while IFS='=' read -r key value; do
-            value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
-            echo "$key=$value" >> "$GITHUB_ENV"
-            echo "Set environment variable: $key=***"
-          done < <(jq -r ".\"$STACK_NAME\" | to_entries[] | .key + \"=\" + .value" outputs.json)
-          echo "Finished setting environment variables from CDK outputs."
-      - name: Deploy Lambda code via script
-        run: ./deploy.sh
-        env:
-          CDK_STACK_NAME: ${{ env.CDK_STACK_NAME }}
-      - name: Verify deployment on API Gateway domain
-        run: |
-          echo "Verifying deployment at https://${{ env.APIGatewayDomain }} with Host header ${{ env.PRODUCTION_DOMAIN }}"
-          if [ -z "${{ env.APIGatewayDomain }}" ]; then
-            echo "Error: env.APIGatewayDomain is empty. Cannot verify deployment."
-            exit 1
-          fi
-          curl -is -H "Host: ${{ env.PRODUCTION_DOMAIN }}" https://${{ env.APIGatewayDomain }} | grep x-version | grep ${GITHUB_SHA::7}
-      - name: Update Cloudflare DNS
-        uses: everpcpc/cloudflare-dns-action@v1
-        with:
-          type: "CNAME"
-          name: ${{ env.PRODUCTION_DOMAIN }}
-          content: ${{ env.APIGatewayDomain }}
-          ttl: 1
-          proxied: false
-          token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          zone: ${{ secrets.CLOUDFLARE_ZONE }}
-      - name: Verify DNS
-        run: |
-          if [ -z "${{ env.APIGatewayDomain }}" ]; then
-            echo "Error: env.APIGatewayDomain is empty. Cannot verify DNS."
-            exit 1
-          fi
-          EXPECTED=${{ env.APIGatewayDomain }}
-          ACTUAL=$(dig +short CNAME ${{ env.PRODUCTION_DOMAIN }})
-          echo "Expected API Gateway Domain: $EXPECTED"
-          echo "Actual CNAME record: ${ACTUAL%.}"
-          [ "$EXPECTED" = "${ACTUAL%.}" ] && echo "✅ DNS is correctly configured" || { echo "❌ DNS configuration mismatch" ; exit 1; }
-      - name: Verify deployment on custom domain
-        run: curl -is https://${{ env.PRODUCTION_DOMAIN }} | grep x-version | grep ${GITHUB_SHA::7}
-
+    needs: staging
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      domain: hello.dabase.com
+    secrets: inherit

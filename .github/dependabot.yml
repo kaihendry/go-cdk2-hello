@@ -1,11 +1,14 @@
 version: 2
 updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
   - package-ecosystem: gomod
-    directory: "/" # Location of package manifests
+    directory: /src
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      # Check for updates to GitHub Actions every week
-      interval: "weekly"
+      interval: weekly
