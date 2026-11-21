@@ -25,7 +25,7 @@ jobs:
       AWSCERT: arn:aws:acm:eu-west-2:407461997746:certificate/9083a66b-72b6-448d-9bce-6ee2e2e52e36
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
+      - uses: actions/setup-go@v7.1.0
         if: inputs.environment == 'staging'
         with:
           go-version: stable
